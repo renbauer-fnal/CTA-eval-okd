@@ -135,6 +135,8 @@ RUN yum install -y --disablerepo="*" --enablerepo="cta-repo" cta-catalogueutils 
 RUN touch /etc/buildtreeRunner
 
 # Docker image run setup
-ADD ${BASEDIR}/run.sh /
+# ADD ${BASEDIR}/run.sh /
 
-ENTRYPOINT ["/run.sh"]
+# ENTRYPOINT ["/run.sh"]
+
+CMD sleep infinity
