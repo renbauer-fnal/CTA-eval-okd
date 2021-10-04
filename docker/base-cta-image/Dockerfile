@@ -19,10 +19,7 @@
 FROM gitlab-registry.cern.ch/linuxsupport/cc7-base
 
 # my environment variables
-ENV ORCHESTRATIONDIR="continuousintegration/orchestration/pods" \
-    LOCALORCHESTRATIONDIR="/opt/ci" \
-    BASEDIR="continuousintegration/docker/ctafrontend/cc7" \
-    CTAREPODIR="/tmp/repo"
+ENV BASEDIR="."
 
 # RUN sed -i 's/enabled=1/enabled=0/g' /etc/yum/pluginconf.d/fastestmirror.conf
 
