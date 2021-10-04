@@ -46,7 +46,7 @@ ENV cta_repo_addr $cta_repo_addr
 RUN echo $'[cta-repo] \n\
 name=CTA Repo \n\
 baseurl=http://'$cta_repo_addr$'/packages \n\
-enabled=1 \n\
+enabled=0 \n\
 gpgcheck=1 \n\
 gpgkey=http://'$cta_repo_addr$'/pgp-key.public' > /etc/yum.repos.d/cta-repo.repo
 
