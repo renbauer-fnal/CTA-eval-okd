@@ -39,16 +39,20 @@ ADD ${BASEDIR}/etc/yum.repos.d-public /etc/yum.repos.d
 
 SHELL ["/bin/bash", "-c"]
 
+ARG cta_repo_addr=cta-eval-repo:8000
+
+ENV cta_repo_addr $cta_repo_addr
+
 RUN echo $'[cta-repo] \n\
 name=CTA Repo \n\
-baseurl=http://cta-eval-repo:8000/packages \n\
+baseurl=http://'$cta_repo_addr$'/packages \n\
 enabled=1 \n\
 gpgcheck=1 \n\
-gpgkey=http://cta-eval-repo:8000/pgp-key.public' > /etc/yum.repos.d/cta-repo.repo
+gpgkey=http://'$cta_repo_addr$'/pgp-key.public' > /etc/yum.repos.d/cta-repo.repo
 
 RUN wget https://public-yum.oracle.com/RPM-GPG-KEY-oracle-ol7 -O /etc/pki/rpm-gpg/RPM-GPG-KEY-oracle
 RUN wget https://git.ceph.com/release.asc -O /etc/pki/rpm-gpg/RPM-ASC-KEY-ceph
-RUN wget http://cta-eval-repo:8000/pgp-key.public -O /etc/pki/rpm-gpg/RPM-GPG-KEY-cta-repo
+RUN wget http://$cta_repo_addr/pgp-key.public -O /etc/pki/rpm-gpg/RPM-GPG-KEY-cta-repo
 
 RUN yum clean all
 
