@@ -36,7 +36,7 @@ ADD ${BASEDIR}/etc/yum.repos.d-public /etc/yum.repos.d
 
 SHELL ["/bin/bash", "-c"]
 
-ARG cta_repo_addr=cta-eval-repo:8000
+ARG cta_repo_addr=localhost:8000
 
 ENV cta_repo_addr $cta_repo_addr
 
@@ -76,45 +76,44 @@ RUN yum install -y \
 # any container. Finally add needed directories.
 RUN yum-config-manager --enable epel --setopt="epel.priority=4" \
   && \
-    yum install -y\
+    yum install -y \
+      ceph-common \
+      cgdb \
+      cryptopp \
+      eos-folly \
+      gtest \
+      heimdal-server \
+      heimdal-workstation \
+      hiredis \
+      jemalloc \
+      jq \
+      json-c \
+      jsoncpp \
+      less \
+      libmicrohttpd \
+      logrotate \
+      lsscsi \
+      ltrace \
+      lynx \
+      mariadb-devel \
+      mt-st \
+      mtx \
+      oracle-instantclient19.3-basic \
+      oracle-instantclient19.3-meta \
+      oracle-instantclient19.3-sqlplus \
+      postgresql-libs \
+      protobuf3 \
+      psmisc \
+      python36 \
+      sg3_utils \
+      shadow-utils \
+      strace \
+      sudo \
       xrootd \
       xrootd-client \
       xrootd-debuginfo \
       xrootd-server \
-      sudo \
-      logrotate \
-      oracle-instantclient19.3-basic \
-      oracle-instantclient19.3-meta \
-      oracle-instantclient19.3-sqlplus \
-      cgdb \
-      less \
-      psmisc \
-      lynx \
-      strace \
-      ltrace \
-      heimdal-server \
-      heimdal-workstation \
-      ceph-common \
-      mt-st \
-      mtx \
-      lsscsi \
-      sg3_utils \
-      protobuf3 \
-      cryptopp \
-      json-c \
-      shadow-utils \
-      sudo \
       zeromq \
-      mariadb-devel \
-      postgresql-libs \
-      gtest \
-      jemalloc \
-      eos-folly \
-      hiredis \
-      jsoncpp \
-      libmicrohttpd \
-      jq \
-      python36 \
   && \
     yum clean all \
   && \
@@ -128,12 +127,7 @@ RUN yum -y install eos-client grpc valgrind make moreutils
 # Install CTA RPMs (except migration tools)
 RUN yum install -y --disablerepo="*" --enablerepo="cta-repo" cta-catalogueutils cta-cli cta-common cta-debuginfo cta-frontend cta-fst-gcd cta-immutable-file-test cta-lib-catalogue cta-objectstore-tools cta-readtp cta-release cta-rmcd cta-smc cta-systemtest-helpers cta-systemtests cta-tape-label cta-taped
 
-# Mark the image as a buildtree image
-RUN touch /etc/buildtreeRunner
-
-# Docker image run setup
-# ADD ${BASEDIR}/run.sh /
-
-# ENTRYPOINT ["/run.sh"]
+# Add cta user and group
+RUN /usr/bin/getent passwd cta || /usr/sbin/useradd -s /bin/nologin -c "CTA system account" -g tape cta
 
 CMD sleep infinity
