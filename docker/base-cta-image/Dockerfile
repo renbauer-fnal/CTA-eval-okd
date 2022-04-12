@@ -1,33 +1,14 @@
-# @project        The CERN Tape Archive (CTA)
-# @copyright      Copyright(C) 2015-2021 CERN
-# @license        This program is free software: you can redistribute it and/or modify
-#                 it under the terms of the GNU General Public License as published by
-#                 the Free Software Foundation, either version 3 of the License, or
-#                 (at your option) any later version.
-#
-#                 This program is distributed in the hope that it will be useful,
-#                 but WITHOUT ANY WARRANTY; without even the implied warranty of
-#                 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#                 GNU General Public License for more details.
-#
-#                 You should have received a copy of the GNU General Public License
-#                 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-# CTA generic image for system tests
-# FROM must be the first command in Dockerfile!!
+# [renbauer] This is basically the buildtree base image, cleaned up a bit
 
 FROM gitlab-registry.cern.ch/linuxsupport/cc7-base
 
 # my environment variables
 ENV BASEDIR="."
 
-# RUN sed -i 's/enabled=1/enabled=0/g' /etc/yum/pluginconf.d/fastestmirror.conf
-
 # yum update could be added at some point.
-RUN yum install -y \
-      wget \
-  && \
-    yum clean all
+RUN yum install -y wget \
+  && yum update -y \
+  && yum clean all
 
 # Add repos for CTA dependencies
 ADD ${BASEDIR}/etc/logrotate.d /etc/logrotate.d
@@ -36,6 +17,11 @@ ADD ${BASEDIR}/etc/yum.repos.d-public /etc/yum.repos.d
 
 SHELL ["/bin/bash", "-c"]
 
+# TODO [renbauer]: This expects a cta-repo to be running on the build host already.
+# This can be done with:
+# $ docker run -it -p 8000:8000 imageregistry.fnal.gov/cta-eval/cta-easy-repo
+# Then, run `docker build --network host` to allow build container access to port
+# There might be a better way, but adding the rpms here directly might cause a lot of bloat.
 ARG cta_repo_addr=localhost:8000
 
 ENV cta_repo_addr $cta_repo_addr
@@ -61,16 +47,9 @@ RUN yum install -y \
   && \
     yum clean all
 
-
-# where do we want to get xroot from?
-# epel version is more recent but eos-citrine-depend repo has a higher priority (4) than epel
-# => need to set epel prio to 4: yum-config-manager --setopt="epel.priority=4"
-# or if taking the older version from eos, eos-citrine-depend must be enabled so that
-# the older version of xroot is installed by cta-cli and is not conflicting later when installing eos...
-# Newer version of CTA requires xroot >= 4.4.1-1...
-# therefore set epel priority to 4...
-# Create local repo for cta artifacts and to cache RPMs locally
-
+# TODO [renbauer] we should only yum install the necessary rpms for all containers, but
+# I don't know what those are yet..
+# This is an alphabetized list from buildtree-stage1-rpms-local/Dockerfile
 
 # Populate local repository and enable it, then install any rpm that is needed for
 # any container. Finally add needed directories.
@@ -126,8 +105,5 @@ RUN yum -y install eos-client grpc valgrind make moreutils
 
 # Install CTA RPMs (except migration tools)
 RUN yum install -y --disablerepo="*" --enablerepo="cta-repo" cta-catalogueutils cta-cli cta-common cta-debuginfo cta-frontend cta-fst-gcd cta-immutable-file-test cta-lib-catalogue cta-objectstore-tools cta-readtp cta-release cta-rmcd cta-smc cta-systemtest-helpers cta-systemtests cta-tape-label cta-taped
-
-# Add cta user and group
-RUN /usr/bin/getent passwd cta || /usr/sbin/useradd -s /bin/nologin -c "CTA system account" -g tape cta
 
 CMD sleep infinity
