@@ -104,6 +104,8 @@ RUN yum-config-manager --enable epel --setopt="epel.priority=4" \
 RUN yum -y install eos-client grpc valgrind make moreutils
 
 # Install CTA RPMs (except migration tools)
+# TODO [renbauer]: These should probably be installed only in the images they're
+# actually needed in as well
 RUN yum install -y --disablerepo="*" --enablerepo="cta-repo" cta-catalogueutils cta-cli cta-common cta-debuginfo cta-frontend cta-fst-gcd cta-immutable-file-test cta-lib-catalogue cta-objectstore-tools cta-readtp cta-release cta-rmcd cta-smc cta-systemtest-helpers cta-systemtests cta-tape-label cta-taped
 
 CMD sleep infinity
