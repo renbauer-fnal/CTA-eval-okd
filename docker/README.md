@@ -14,9 +14,11 @@ base-eos-image | buildtree-stage2-eos
 
 (none) | buildtree-stage3-scripts (these scripts are no longer needed, as logic has largely been moved into image build)
 
-base-pod-image | buildtree-stage1-rpms + /opt/bin/init_pod.sh logic
+base-pod-image | buildtree-stage1-rpms + /opt/bin/init_pod.sh
 
-base-eos-pod-image | buildtree-stage2-eos + /opt/bin/init_pod.sh logic
+base-eos-pod-image | buildtree-stage2-eos + /opt/bin/init_pod.sh
+
+client-image | buildtree-stage1-rpms + opt/bin/client.sh
 
 ---
 
