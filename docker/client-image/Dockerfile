@@ -1,6 +1,6 @@
 # Base pod image with logic from /opt/run/bin/client.sh
 
-FROM imageregistry.fnal.gov/cta-eval/cta-eval-okd-base-pod-image
+FROM imageregistry.fnal.gov/cta-eval/base-pod-image
 
 RUN yum-config-manager --enable cta-artifacts \ 
     && yum-config-manager --enable ceph
