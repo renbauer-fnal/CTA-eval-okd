@@ -8,8 +8,8 @@ RUN touch /var/log/cta-rados-locking.log \
 # Some commands require information (like hostname) not yet available.
 # To accomodate such commands we will build an init_script inside the image,
 # and use this script as the entrypoint for all images.
-RUN touch ~/init_script.sh
-RUN chmod u+x ~/init_script.sh
+RUN touch /etc/init_script.sh
+RUN chmod u+x /etc/init_script.sh
 
 # Change permissions of /etc/hosts so it can be modified in init script
 RUN chmod 666 /etc/hosts
@@ -40,4 +40,4 @@ RUN /usr/bin/getent passwd cta || /usr/sbin/useradd -s /bin/nologin -c "CTA syst
 RUN mkdir -p /var/log/cta \
     && chmod a+rwx /var/log/cta
 
-CMD ~/init_script.sh && sleep infinity
+CMD /etc/init_script.sh && sleep infinity

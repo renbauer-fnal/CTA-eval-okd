@@ -23,4 +23,4 @@ RUN yum -y install \
 ADD cta-cli.conf /etc/cta/cta-cli.conf
 
 # Inherit CMD from parent
-# CMD ~/init_script.sh && sleep infinity
+# CMD /etc/init_script.sh && sleep infinity
