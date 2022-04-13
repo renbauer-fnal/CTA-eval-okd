@@ -9,15 +9,15 @@ RUN touch /var/log/cta-rados-locking.log \
 # To accomodate such commands we will build an init_script inside the image,
 # and use this script as the entrypoint for all images.
 RUN touch /etc/init_script.sh
-RUN chmod u+x /etc/init_script.sh
+RUN chmod 755 /etc/init_script.sh
 
 # Change permissions of /etc/hosts so it can be modified in init script
 RUN chmod 666 /etc/hosts
 
 # Fix reverse DNS for xrootd. This has a hostname dependency so must be done in the init script
-RUN echo "sed -i -c \"s/^\($(hostname -i)\)\s\+.*$/\1 $(hostname -s).$(grep search /etc/resolv.conf | cut -d\  -f2) $(hostname -s)/\" /etc/hosts" >> ~/init_script.sh
+RUN echo "sed -i -c \"s/^\($(hostname -i)\)\s\+.*$/\1 $(hostname -s).$(grep search /etc/resolv.conf | cut -d\  -f2) $(hostname -s)/\" /etc/hosts" >> /etc/init_script.sh
 # Change permissions of /etc/hosts back to default in init script
-RUN echo "chmod 644 /etc/hosts" >> ~/init_script.sh
+RUN echo "chmod 644 /etc/hosts" >> /etc/init_script.sh
 
 # Yum should use IPv4 (not necessarily needed)
 RUN echo "ip_resolve=IPv4" >> /etc/yum.conf
