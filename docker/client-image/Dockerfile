@@ -4,9 +4,6 @@ FROM imageregistry.fnal.gov/cta-eval/base-pod-image
 
 RUN yum-config-manager --enable ceph
 
-# Not sure why this is suddenly needed here..
-RUN yum-config-manager --disable cta
-
 # Install missing RPMs (these are actually all installed already)
 RUN yum -y install \
      eos-client \
@@ -21,6 +18,9 @@ RUN yum -y install \
      # cta-systemtest-helpers \
 
 ADD cta-cli.conf /etc/cta/cta-cli.conf
+
+# Install host to check reverse DNS
+RUN yum -y install bind-utils
 
 # Inherit CMD from parent
 # CMD /etc/init_script.sh && sleep infinity

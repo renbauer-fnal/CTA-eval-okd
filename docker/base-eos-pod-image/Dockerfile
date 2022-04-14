@@ -10,4 +10,5 @@ RUN yum install -y \
   && \
     rm -rf /var/cache/yum
 
-CMD sleep infinity
+# Inherit command from parent
+# CMD /etc/init.sh && sleep infinity
