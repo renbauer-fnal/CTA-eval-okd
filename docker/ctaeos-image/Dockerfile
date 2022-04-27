@@ -44,13 +44,6 @@ RUN mkdir -p /var/eos/config && \
 RUN mkdir /var/eos/config/host && \
     chown daemon:root /var/eos/config && \
     chown daemon:root /var/eos/config/host
-# This file is owned by daemon:daemon in original script, but in
-# order to be moved by init script it must be owned by group root,
-# because the container user is in root group but not daemon group
-RUN touch /var/eos/config/host/default.eoscf && \
-    chgrp -R 0 /var/eos/config/host && \
-    chmod -R g=u var/eos/config/host && \
-    chown daemon:root /var/eos/config/host/default.eoscf
 
 # Add init script containing logic that can't be performed at build,
 # append to init script inherited from parent images
@@ -75,3 +68,13 @@ RUN echo -n '0 u:daemon g:daemon n:ctaeos+ N:6361884315374059521 c:1481241620 e:
     chmod 400 /etc/eos.keytab && \
     chown daemon:daemon /etc/eos.keytab
 RUN mkdir -p /run/lock/subsys
+# This file is owned by daemon:daemon in original script, but in
+# order to be moved to /var/eos/config/{eoshost}
+# by init script it must be owned by group root, because
+# the container user is in root group but not daemon group
+RUN touch /var/eos/config/host/default.eoscf && \
+    chgrp -R 0 /var/eos/config/host && \
+    chmod -R g=u var/eos/config/host && \
+    chown daemon:root /var/eos/config/host/default.eoscf
+
+
