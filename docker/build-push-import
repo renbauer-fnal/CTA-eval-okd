@@ -1,0 +1,7 @@
+for image in "$@"; do
+  docker system prune -a -f
+  docker build $image/ -t imageregistry.fnal.gov/cta-eval/$image
+  docker push imageregistry.fnal.gov/cta-eval/$image
+  sleep 10
+  oc import-image $image imageregistry.fnal.gov/cta-eval/$image
+done
