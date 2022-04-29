@@ -41,4 +41,7 @@ RUN /usr/bin/getent passwd cta || /usr/sbin/useradd -s /bin/nologin -c "CTA syst
 RUN mkdir -p /var/log/cta \
     && chmod a+rwx /var/log/cta
 
+# Add pod specific configuration
+ADD data/config /opt/ci
+
 CMD /etc/init_script.sh && sleep infinity

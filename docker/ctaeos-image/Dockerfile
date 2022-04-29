@@ -26,10 +26,8 @@ RUN groupadd --gid 1100 eosusers && \
     useradd --uid 14001 --gid 1400 eosadmin1 && \
     useradd --uid 14002 --gid 1400 eosadmin2
 
-# TODO [renbauer] Find these config files
-# # copy needed template configuration files (nice to get all lines for logs)
-# yes | cp -r /opt/ci/ctaeos/etc /
-#
+# copy needed template configuration files
+RUN cp -r /opt/ci/ctaeos/etc /
 
 # Set permissions for files touched by init script
 RUN chgrp -R 0 /etc/sysconfig && \
@@ -41,6 +39,9 @@ RUN chgrp -R 0 /var/eos && \
 RUN mkdir -p /var/eos/config && \
     chgrp -R 0 /var/eos/config && \
     chmod -R g=u var/eos/config
+RUN mkdir -p /var/log/eos && \
+    chgrp -R 0 /var/log/eos && \
+    chmod -R g=u /var/log/eos
 RUN mkdir /var/eos/config/host && \
     chown daemon:root /var/eos/config && \
     chown daemon:root /var/eos/config/host
@@ -57,16 +58,34 @@ RUN echo "mgmofs.protowfresource /ctafrontend"  >> /etc/xrd.cf.mgm
 # Enable tape support
 RUN echo "mgmofs.tapeenabled true"  >> /etc/xrd.cf.mgm
 
+# Add this for SSI protocol buffer workflow (xrootd >=4.8.2)
+RUN echo "mgmofs.protowfendpoint ctafrontend:10955" >> /etc/xrd.cf.mgm && \
+    echo "mgmofs.protowfresource /ctafrontend"  >> /etc/xrd.cf.mgm
+
+# Add configmap based configuration (initially Namespace)
+# TODO: /etc/config/eos/xrd.cf.mgm comes from a configmap which is not yet implemented. For now we cheat** which may be okay if we don't need to configure this for our environment.
+# test -f /etc/config/eos/xrd.cf.mgm && cat /etc/config/eos/xrd.cf.mgm >> /etc/xrd.cf.mgm
+RUN echo "mgmofs.nslib /usr/lib64/libEosNsInMemory.so" >> /etc/xrd.cf.mgm
+
 # prepare eos startup
   # skip systemd for eos initscripts
 ENV SYSTEMCTL_SKIP_REDIRECT=1
+
+# TODO: reimplement authentication
+# Openshift containers run as an unknown user, so keytab cannot be set to
+# that particular user, and if permissions are not 400 xrootd fails with
+# keytab not secure.
+# To get around, all security options are currently commented out of xrd
+# config files (currently under base-pod but maybe should be here).
+# 
 #  echo y | xrdsssadmin -k ${EOS_INSTANCE}+ -u daemon -g daemon add /etc/eos.keytab
 # need a deterministic key for taped and it must be forwardable in case of kubernetes
 # see [here](http://xrootd.org/doc/dev47/sec_config.htm#_Toc489606587)
 # can only have one key????
-RUN echo -n '0 u:daemon g:daemon n:ctaeos+ N:6361884315374059521 c:1481241620 e:0 f:0 k:1a08f769e9c8e0c4c5a7e673247c8561cd23a0e7d8eee75e4a543f2d2dd3fd22' > /etc/eos.keytab && \
-    chmod 400 /etc/eos.keytab && \
-    chown daemon:daemon /etc/eos.keytab
+# RUN echo -n '0 u:daemon g:daemon n:ctaeos+ N:6361884315374059521 c:1481241620 e:0 f:0 k:1a08f769e9c8e0c4c5a7e673247c8561cd23a0e7d8eee75e4a543f2d2dd3fd22' > /etc/eos.keytab && \
+  # chmod 400 /etc/eos.keytab && \
+  #  chown daemon:daemon /etc/eos.keytab
+
 RUN mkdir -p /run/lock/subsys
 # This file is owned by daemon:daemon in original script, but in
 # order to be moved to /var/eos/config/{eoshost}
@@ -77,4 +96,29 @@ RUN touch /var/eos/config/host/default.eoscf && \
     chmod -R g=u var/eos/config/host && \
     chown daemon:root /var/eos/config/host/default.eoscf
 
+# Configure mq mgm on localhost as master
+RUN touch /var/eos/eos.mq.master && \
+    touch /var/eos/eos.mgm.rw
 
+RUN mkdir -p /fst && \
+    chown daemon:daemon /fst/
+
+# setting higher OS limits for EOS processes
+RUN maxproc=$(ulimit -u) && \
+    echo "daemon soft nproc ${maxproc}" >> /etc/security/limits.conf && \
+    echo "daemon hard nproc ${maxproc}" >> /etc/security/limits.conf
+
+# Overwrite command for testing
+# CMD sleep infinity
+
+# Set env vars per no systemd
+ENV LD_PRELOAD=/usr/lib64/libjemalloc.so.1
+ENV XRDPROG=/opt/eos/xrootd/bin/xrootd
+
+# TODO: Limit this to only necessary commands
+RUN echo "# Allow members of group root to run any command anywhere" >> /etc/sudoers
+RUN echo "# (this includes the container user)" >> /etc/sudoers
+RUN echo "%root   ALL=(ALL)       ALL" >> /etc/sudoers
+
+# Try to give container user permissions to run xrootd as another group
+# RUN chmod g+s /opt/eos/xrootd/bin/*

@@ -23,11 +23,29 @@ EOS_TMP_DIR=/eos/${EOS_INSTANCE}/tmp
   sed -i -e "s/DUMMY_HOST_TO_REPLACE/${eoshost}/" /etc/xrd.cf.mq
   sed -i -e "s/DUMMY_HOST_TO_REPLACE/${eoshost}/" /etc/xrd.cf.fst
 
-# Add this for SSI prococol buffer workflow (xrootd >=4.8.2)
+# Add this for SSI protocol buffer workflow (xrootd >=4.8.2)
 echo "mgmofs.protowfendpoint ctafrontend:10955" >> /etc/xrd.cf.mgm
 echo "mgmofs.protowfresource /ctafrontend"  >> /etc/xrd.cf.mgm
 
 # Add configmap based configuration (initially Namespace)
-test -f /etc/config/eos/xrd.cf.mgm && cat /etc/config/eos/xrd.cf.mgm >> /etc/xrd.cf.mgm
+# TODO: /etc/config/eos/xrd.cf.mgm comes from a configmap which is not yet implemented. For now we cheat** which may be okay if we don't need to configure this for our environment.
+# test -f /etc/config/eos/xrd.cf.mgm && cat /etc/config/eos/xrd.cf.mgm >> /etc/xrd.cf.mgm
+echo "\nmgmofs.nslib /usr/lib64/libEosNsInMemory.so" >> /etc/xrd.cf.mgm
 
 mv -v /var/eos/config/host /var/eos/config/${eoshost}
+
+# Skip starting quarkDB because we are using InMemory...
+# cat /etc/config/eos/xrd.cf.mgm | grep mgmofs.nslib | grep -qi eosnsquarkdb && /opt/run/bin/start_quarkdb.sh
+
+source /etc/sysconfig/eos
+
+# Waiting for /CANSTART file before starting eos
+# TODO: /CANSTART is added by create_instance.sh after configuring a lot of KDC stuff. We need to find a way to configure this asynchronously.
+
+# start and setup eos for xrdcp to the ${CTA_TEST_DIR}, no systemd
+# XRDPROG is set by image build
+# These are usually run as daemon user, but that may not be possible from
+# container user. We may have to rethink the user structure to make this ok.
+$XRDPROG -n fst -c /etc/xrd.cf.fst -l /var/log/eos/xrdlog.fst -b # -Rdaemon
+$XRDPROG -n mq -c /etc/xrd.cf.mq -l /var/log/eos/xrdlog.mq -b # -Rdaemon
+$XRDPROG -n mgm -c /etc/xrd.cf.mgm -m -l /var/log/eos/xrdlog.mgm -b # -Rdaemon
