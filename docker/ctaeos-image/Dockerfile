@@ -4,6 +4,9 @@ FROM imageregistry.fnal.gov/cta-eval/base-eos-pod-image:latest
 
 # We have cta and eos rpms from base image
 
+# Add pod specific configuration
+ADD data/config /opt/ci
+
 # Check that the /usr/bin/cta-fst-gcd executable has been installed in init script
 RUN test -e /usr/bin/cta-fst-gcd || \
         { echo "/usr/bin/cta-fst-gcd MISSING" ; exit 1; } && \
@@ -36,6 +39,12 @@ RUN chgrp -R 0 /etc && \
     chmod -R g=u /etc
 RUN chgrp -R 0 /var/eos && \
     chmod -R g=u var/eos
+RUN mkdir -p /var/eos/auth && \
+    chgrp -R 0 /var/eos/auth && \
+    chmod -R g=u var/eos/auth
+RUN mkdir -p /var/eos/md && \
+    chgrp -R 0 /var/eos/md && \
+    chmod -R g=u var/eos/md
 RUN mkdir -p /var/eos/config && \
     chgrp -R 0 /var/eos/config && \
     chmod -R g=u var/eos/config
@@ -84,7 +93,7 @@ ENV SYSTEMCTL_SKIP_REDIRECT=1
 # can only have one key????
 # RUN echo -n '0 u:daemon g:daemon n:ctaeos+ N:6361884315374059521 c:1481241620 e:0 f:0 k:1a08f769e9c8e0c4c5a7e673247c8561cd23a0e7d8eee75e4a543f2d2dd3fd22' > /etc/eos.keytab && \
   # chmod 400 /etc/eos.keytab && \
-  #  chown daemon:daemon /etc/eos.keytab
+  # chown daemon:daemon /etc/eos.keytab
 
 RUN mkdir -p /run/lock/subsys
 # This file is owned by daemon:daemon in original script, but in
@@ -116,9 +125,10 @@ ENV LD_PRELOAD=/usr/lib64/libjemalloc.so.1
 ENV XRDPROG=/opt/eos/xrootd/bin/xrootd
 
 # TODO: Limit this to only necessary commands
-RUN echo "# Allow members of group root to run any command anywhere" >> /etc/sudoers
-RUN echo "# (this includes the container user)" >> /etc/sudoers
-RUN echo "%root   ALL=(ALL)       ALL" >> /etc/sudoers
+# TODO (cleanup): This doesn't seem to do anything, can't run sudo anyway because we get "unknown user"
+# RUN echo "# Allow members of group root to run any command anywhere" >> /etc/sudoers
+# RUN echo "# (this includes the container user)" >> /etc/sudoers
+# RUN echo "%root   ALL=(ALL)       ALL" >> /etc/sudoers
 
 # Try to give container user permissions to run xrootd as another group
 # RUN chmod g+s /opt/eos/xrootd/bin/*
